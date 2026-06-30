@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedFlow - Módulo de Triaje</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: border-top 0.4s ease;
+            border-top: 8px solid #cbd5e1; /* Color neutro inicial */
+        }
+        h2 {
+            color: #1e293b;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        p.subtitle {
+            color: #64748b;
+            text-align: center;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+        /* Indicador visual de nivel de urgencia */
+        .semaforo-box {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background-color: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #334155;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .form-control:focus {
+            border-color: #3b82f6;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .btn-submit {
+            width: 100%;
+            background-color: #0f172a;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            background-color: #1e293b;
+        }
+        /* Clases dinámicas aplicadas con JavaScript */
+        .triaje-verde {
+            background-color: #dcfce7 !important;
+            color: #166534 !important;
+            border-color: #bbf7d0 !important;
+        }
+        .triaje-amarillo {
+            background-color: #fef9c3 !important;
+            color: #854d0e !important;
+            border-color: #fef08a !important;
+        }
+        .triaje-rojo {
+            background-color: #fee2e2 !important;
+            color: #991b1b !important;
+            border-color: #fca5a5 !important;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="cardTriaje">
+    <h2>MedFlow - Valoración de Triaje</h2>
+    <p class="subtitle">Enfermería - Clasificación del Paciente</p>
+
+    <div id="semaforo" class="semaforo-box">
+        Esperando Signos Vitales...
+    </div>
+
+    <form id="formTriaje">
+        <div class="form-group">
+            <label for="id_paciente">ID del Paciente (Consecutivo de Base de Datos)</label>
+            <input type="number" id="id_paciente" class="form-control" placeholder="Ej: 1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="tension">Tensión Arterial (Sistólica/Diastólica)</label>
+            <input type="text" id="tension" class="form-control" placeholder="Ej: 120/80" required>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label for="temperatura">Temperatura (°C)</label>
+                <input type="number" step="0.1" id="temperatura" class="form-control" placeholder="Ej: 36.5" required>
+            </div>
+            <div class="form-group">
+                <label for="frecuencia">Frecuencia Cardíaca (LPM)</label>
+                <input type="number" id="frecuencia" class="form-control" placeholder="Ej: 75" required>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit">Guardar Valoración y Enviar a Cola</button>
+    </form>
+</div>
+
+<script>
+    const tensionInput = document.getElementById('tension');
+    const tempInput = document.getElementById('temperatura');
+    const frecInput = document.getElementById('frecuencia');
+    const semaforo = document.getElementById('semaforo');
+    const cardTriaje = document.getElementById('cardTriaje');
+
+    function evaluarSignosEnTiempoReal() {
+    const tension = tensionInput.value;
+    const temp = parseFloat(tempInput.value) || 0;
+    const frec = parseInt(frecInput.value) || 0;
+
+    // Si el usuario solo digita un número (ej: 70), lo tomamos directamente como la sistólica
+    let sistolica = 120;
+    if (tension) {
+        if (tension.includes('/')) {
+            sistolica = parseInt(tension.split('/')[0]) || 120;
+        } else {
+            sistolica = parseInt(tension) || 120;
+        }
+    }
+
+    // Limpiar estilos previos
+    semaforo.className = 'semaforo-box';
+    cardTriaje.style.borderTopColor = '#cbd5e1';
+
+    if (!tension && !temp && !frec) {
+        semaforo.innerText = "Esperando Signos Vitales...";
+        return;
+    }
+
+    // 🚨 REGLA ROJO: Estado crítico (Ahora incluye la sistólica <= 70)
+    if (temp >= 40.0 || temp < 35.0 || frec >= 130 || frec < 45 || sistolica >= 180 || sistolica <= 70) {
+        semaforo.className = 'semaforo-box triaje-rojo';
+        semaforo.innerHTML = "🚨 TRIAJE I (ROJO) - EMERGENCIA VITAL";
+        cardTriaje.style.borderTopColor = '#dc2626';
+    } 
+    // ⚠️ REGLA AMARILLO: Urgencia moderada
+    else if ((temp >= 38.5 && temp < 40.0) || (frec >= 100 && frec < 130) || (sistolica >= 140 && sistolica < 180)) {
+        semaforo.className = 'semaforo-box triaje-amarillo';
+        semaforo.innerHTML = "⚠️ TRIAJE II (AMARILLO) - URGENCIA";
+        cardTriaje.style.borderTopColor = '#eab308';
+    } 
+    // ✅ REGLA VERDE: Estable
+    else {
+        semaforo.className = 'semaforo-box triaje-verde';
+        semaforo.innerHTML = "✅ TRIAJE III (VERDE) - CONSULTA GENERAL";
+        cardTriaje.style.borderTopColor = '#16a34a';
+    }
+}
+
+    // Escuchar cuando el usuario digite en los campos
+    tensionInput.addEventListener('input', evaluarSignosEnTiempoReal);
+    tempInput.addEventListener('input', evaluarSignosEnTiempoReal);
+    frecInput.addEventListener('input', evaluarSignosEnTiempoReal);
+
+    // Enviar datos al Backend al hacer submit
+    document.getElementById('formTriaje').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const datos = {
+            id_paciente: document.getElementById('id_paciente').value,
+            tension_arterial: tensionInput.value,
+            temperatura: tempInput.value,
+            frecuencia_cardiaca: frecInput.value
+        };
+
+        fetch('procesar_triaje.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                alert(`¡Guardado! Clasificación oficial del Servidor: Nivel ${data.nivel_triaje}`);
+                document.getElementById('formTriaje').reset();
+                evaluarSignosEnTiempoReal();
+            } else {
+                alert(`Error: ${data.mensaje}`);
+            }
+        })
+        .catch(error => {
+            alert("Error conectando con el backend de triaje.");
+            console.error(error);
+        });
+    });
+</script>
+
+</body>
+</html>

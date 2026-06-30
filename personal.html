@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedFlow - Gestión de Personal</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #f1f5f9; padding: 40px; display: flex; justify-content: center; }
+        .card { background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 500px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h3 { margin-bottom: 20px; color: #1e293b; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #475569; font-size: 0.9rem;}
+        .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; }
+        .btn { width: 100%; background: #0284c7; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #0369a1; }
+        #log { margin-top: 20px; padding: 12px; border-radius: 4px; display: none; line-height: 1.4; font-size: 0.95rem;}
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h3>🚨 Reporte de Novedades y Reemplazos</h3>
+    <form id="formNovedad">
+        <div class="form-group">
+            <label>ID del Empleado Ausente (Ej: 1 para el Dr. Juan Carlos)</label>
+            <input type="number" id="id_ausente" class="form-control" value="1" required>
+        </div>
+        <div class="form-group">
+            <label>Motivo de la Novedad</label>
+            <select id="motivo" class="form-control">
+                <option value="Incapacidad">Incapacidad</option>
+                <option value="Vacaciones">Vacaciones</option>
+                <option value="Licencia">Licencia</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Duración (Días)</label>
+            <input type="number" id="duracion" class="form-control" value="5" required>
+        </div>
+        <div class="form-group">
+            <label>Autorizado Por (Auxiliar de RRHH)</label>
+            <input type="text" id="autorizado" class="form-control" value="Carlos Arteaga" required>
+        </div>
+        <button type="submit" class="btn">Procesar Reemplazo Inteligente</button>
+    </form>
+
+    <div id="log"></div>
+</div>
+
+<script>
+    document.getElementById('formNovedad').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const logBox = document.getElementById('log');
+        logBox.style.display = 'none';
+
+        const datos = {
+            id_empleado_ausente: document.getElementById('id_ausente').value,
+            motivo: document.getElementById('motivo').value,
+            duracion_dias: document.getElementById('duracion').value,
+            autorizado_por: document.getElementById('autorizado').value
+        };
+
+        fetch('registrar_novedad.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        })
+        .then(res => res.json())
+        .then(data => {
+            logBox.style.display = 'block';
+            if(data.success) {
+                logBox.style.background = '#e0f2fe';
+                logBox.style.color = '#0369a1';
+                logBox.innerHTML = `<strong>⚡ Sistema Activo:</strong> ${data.mensaje}`;
+            } else {
+                logBox.style.background = '#fee2e2';
+                logBox.style.color = '#991b1b';
+                logBox.innerHTML = `<strong>❌ Error:</strong> ${data.mensaje}`;
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
