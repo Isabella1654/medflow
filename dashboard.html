@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedFlow - Dashboard de Urgencias</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f8fafc; padding: 30px; color: #1e293b; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        .header h1 { color: #0f172a; font-size: 1.8rem; }
+        .btn-refresh { background: #0284c7; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        .btn-refresh:hover { background: #0369a1; }
+        
+        .grid-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .columna { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-top: 5px solid #cbd5e1; min-height: 200px; }
+        
+        .col-rojo { border-top-color: #ef4444; }
+        .col-amarillo { border-top-color: #eab308; }
+        .col-verde { border-top-color: #22c55e; }
+        
+        .columna h2 { font-size: 1.2rem; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .badge-count { background: #f1f5f9; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; color: #475569; }
+        
+        .card-paciente { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin-bottom: 12px; transition: transform 0.2s; }
+        .card-paciente:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .paciente-name { font-weight: bold; color: #0f172a; margin-bottom: 5px; font-size: 1rem; }
+        .info-row { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+        .info-row strong { color: #334155; }
+        
+        .badge-estado { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-top: 8px; }
+        .bg-espera { background: #fee2e2; color: #991b1b; }
+        .bg-consulta { background: #fef9c3; color: #713f12; }
+        .bg-reanimacion { background: #7f1d1d; color: white; padding: 4px 10px; animation: pulse 2s infinite; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🏥 Tablero de Control de Urgencias en Tiempo Real</h1>
+    <button class="btn-refresh" onclick="cargarTablero()">🔄 Actualizar Estado</button>
+</div>
+
+<div class="grid-dashboard">
+    <div class="columna col-rojo">
+        <h2>🚨 REANIMACIÓN (Triaje I) <span class="badge-count" id="count-rojo">0</span></h2>
+        <div id="lista-rojo"></div>
+    </div>
+
+    <div class="columna col-amarillo">
+        <h2>⚠️ URGENCIAS (Triaje II) <span class="badge-count" id="count-amarillo">0</span></h2>
+        <div id="lista-amarillo"></div>
+    </div>
+
+    <div class="columna col-verde">
+        <h2>✅ CONSULTA GRAL (Triaje III) <span class="badge-count" id="count-verde">0</span></h2>
+        <div id="lista-verde"></div>
+    </div>
+</div>
+
+<script>
+    function cargarTablero() {
+        const rojoDiv = document.getElementById('lista-rojo');
+        const amarilloDiv = document.getElementById('lista-amarillo');
+        const verdeDiv = document.getElementById('lista-verde');
+
+        rojoDiv.innerHTML = '';
+        amarilloDiv.innerHTML = '';
+        verdeDiv.innerHTML = '';
+
+        let cRojo = 0, cAmarillo = 0, cVerde = 0;
+
+        fetch('obtener_colas.php')
+            .then(res => res.json())
+            .then(res => {
+                if (res.success && res.data) {
+                    res.data.forEach(item => {
+                        const medico = item.medico_nombres ? `Dr. ${item.medico_nombres} ${item.medico_apellidos}` : 'Buscando médico libre...';
+                        const claseEstado = item.estado_atencion === 'Reanimación' ? 'bg-reanimacion' : (item.estado_atencion === 'En Espera' ? 'bg-espera' : 'bg-consulta');
+
+                        const cardHtml = `
+                            <div class="card-paciente">
+                                <div class="paciente-name">${item.paciente_nombres} ${item.paciente_apellidos}</div>
+                                <div class="info-row">📍 <strong>Consultorio:</strong> ${item.consultorio}</div>
+                                <div class="info-row">👨‍⚕️ <strong>Asignado:</strong> ${medico}</div>
+                                <span class="badge-estado ${claseEstado}">${item.estado_atencion.toUpperCase()}</span>
+                            </div>
+                        `;
+
+                        if (item.nivel_triaje === 'Rojo') {
+                            rojoDiv.innerHTML += cardHtml;
+                            cRojo++;
+                        } else if (item.nivel_triaje === 'Amarillo') {
+                            amarilloDiv.innerHTML += cardHtml;
+                            cAmarillo++;
+                        } else if (item.nivel_triaje === 'Verde') {
+                            verdeDiv.innerHTML += cardHtml;
+                            cVerde++;
+                        }
+                    });
+
+                    document.getElementById('count-rojo').innerText = cRojo;
+                    document.getElementById('count-amarillo').innerText = cAmarillo;
+                    document.getElementById('count-verde').innerText = cVerde;
+                }
+            })
+            .catch(err => console.error("Error cargando el dashboard:", err));
+    }
+
+    window.onload = cargarTablero;
+    setInterval(cargarTablero, 5000); // Se actualiza cada 5 segundos automáticamente
+</script>
+
+</body>
+</html>

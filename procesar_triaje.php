@@ -15,8 +15,8 @@ $data = json_decode(file_get_contents("php://input"), true);
 
 if (!empty($data['id_paciente']) && isset($data['temperatura']) && isset($data['frecuencia_cardiaca']) && !empty($data['tension_arterial'])) {
     
-    // 1. Guardar los signos vitales y calcular el nivel de triaje
-    $resultadoTriaje = $triajeModel->guardarTriaje(
+    // 1. LLAMADO CORREGIDO: Usamos registrarTriaje que es el método real de tu modelo
+    $resultadoTriaje = $triajeModel->registrarTriaje(
         $data['id_paciente'],
         $data['tension_arterial'],
         $data['temperatura'],
@@ -24,30 +24,22 @@ if (!empty($data['id_paciente']) && isset($data['temperatura']) && isset($data['
     );
 
     if ($resultadoTriaje['success']) {
-        $nivel = $resultadoTriaje['nivel_triaje']; // 'Rojo', 'Amarillo' o 'Verde'
+        $nivel = $resultadoTriaje['nivel_triaje']; 
         $id_paciente = $data['id_paciente'];
-        
-        // Determinar qué especialidad de médico se necesita
-        // Rojo y Amarillo van para Médicos de Urgencias (id_especialidad de Urgencias o Médico General en turno de urgencias)
-        // Para este ejemplo base usaremos id_especialidad = 1 (Medicina General / Urgencias)
-        $id_especialidad_buscada = 1; 
 
-        // 2. ALGORITMO DE ASIGNACIÓN AUTOMÁTICA: 
-        // Busca un médico activo de esa especialidad que no esté ocupado en este instante
         try {
+            // 2. Buscar un médico activo disponible en el hospital
             $query_medico = "SELECT id_empleado FROM empleados 
-                             WHERE id_especialidad = :esp_id 
-                               AND estado = 'Activo' 
-                             ORDER BY RAND() LIMIT 1"; // Simula asignación por disponibilidad aleatoria/carga rápida
+                             WHERE estado = 'Activo' 
+                             ORDER BY RAND() LIMIT 1"; 
             
             $stmt_med = $db->prepare($query_medico);
-            $stmt_med->bindParam(":esp_id", $id_especialidad_buscada);
             $stmt_med->execute();
             $medico = $stmt_med->fetch(PDO::FETCH_ASSOC);
 
             $id_medico = $medico ? $medico['id_empleado'] : null;
             
-            // Asignar consultorios por defecto según el caso
+            // 3. Asignar consultorios por defecto según el nivel de triaje calculado
             $consultorio = "Cons-01";
             $estado_inicial = "En Espera";
             
@@ -60,7 +52,7 @@ if (!empty($data['id_paciente']) && isset($data['temperatura']) && isset($data['
                 $consultorio = "Gral-05";
             }
 
-            // 3. Insertar el paciente en la cola de atención médica
+            // 4. Insertar el paciente en la cola de atención médica
             $query_cola = "INSERT INTO atenciones_colas (id_paciente, nivel_triaje, id_medico_asignado, consultorio, estado_atencion) 
                            VALUES (:paciente, :nivel, :medico, :consultorio, :estado)";
             
@@ -75,17 +67,17 @@ if (!empty($data['id_paciente']) && isset($data['temperatura']) && isset($data['
             echo json_encode([
                 "success" => true,
                 "nivel_triaje" => $nivel,
-                "mensaje" => "Triaje guardado. Paciente asignado automáticamente a la cola en el consultorio $consultorio."
+                "mensaje" => "Triaje guardado. Paciente asignado automáticamente a la cola en el consultorio " . $consultorio
             ]);
 
         } catch (PDOException $e) {
-            echo json_encode(["success" => false, "mensaje" => "Error en asignación automática: " . $e->getMessage()]);
+            echo json_encode(["success" => false, "mensaje" => "Error en asignación automática de cola: " . $e->getMessage()]);
         }
 
     } else {
-        echo json_encode(["success" => false, "mensaje" => $resultadoTriaje['mensaje']]);
+        echo json_encode(["success" => false, "mensaje" => $resultadoTriaje['error']]);
     }
 } else {
-    echo json_encode(["success" => false, "mensaje" => "Datos de triaje incompletas."]);
+    echo json_encode(["success" => false, "mensaje" => "Datos de triaje incompletos."]);
 }
 ?>
