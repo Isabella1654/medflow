@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedFlow - Módulo de Atención Médica</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f0f2f5; padding: 30px; color: #1e293b; }
+        .container { max-width: 700px; background: white; margin: 0 auto; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        h1 { color: #0f172a; font-size: 1.6rem; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; color: #334155; font-size: 0.95rem; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; color: #0f172a; background-color: #f8fafc; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+        
+        textarea { resize: vertical; min-height: 100px; }
+        
+        .btn-submit { background: #10b981; color: white; border: none; width: 100%; padding: 12px; font-weight: bold; border-radius: 6px; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .btn-submit:hover { background: #059669; }
+        
+        .alert { padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: 500; display: none; }
+        .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>👨‍⚕️ Registro de Evolución Médica y Despacho</h1>
+    
+    <div id="alert-box" class="alert"></div>
+
+    <form id="form-atencion">
+        <div class="form-group">
+            <label for="id_cola">Seleccionar Paciente en Cola</label>
+            <select id="id_cola" required onchange="actualizarInfoPaciente()">
+                <option value="">Cargando pacientes en espera...</option>
+            </select>
+        </div>
+
+        <input type="hidden" id="id_paciente">
+        <input type="hidden" id="id_medico">
+
+        <div class="form-group">
+            <label>Nivel de Triaje Asignado</label>
+            <input type="text" id="display-triaje" readonly style="font-weight: bold; background-color: #e2e8f0;">
+        </div>
+
+        <div class="form-group">
+            <label for="diagnostico">Diagnóstico / Evolución Clínica</label>
+            <textarea id="diagnostico" placeholder="Escriba los hallazgos clínicos y sintomatología del paciente..." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="tratamiento">Tratamiento / Plan de Manejo</label>
+            <textarea id="tratamiento" placeholder="Medicamentos formulados, exámenes solicitados o indicaciones de cuidado..." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="destino_paciente">Destino y Despacho Final</label>
+            <select id="destino_paciente" required>
+                <option value="">-- Seleccione el destino --</option>
+                <option value="Alta Médica">Alta Médica</option>
+                <option value="Hospitalización">Hospitalización</option>
+                <option value="Remisión">Remisión a Especialidad</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-submit">💾 Registrar Evolución y Despachar</button>
+    </form>
+</div>
+
+<script>
+    let pacientesData = [];
+
+    // Cargar los pacientes disponibles desde el backend que creamos en obtener_colas.php
+    function cargarPacientesEnEspera() {
+        const selectCola = document.getElementById('id_cola');
+        
+        fetch('obtener_colas.php')
+            .then(res => res.json())
+            .then(res => {
+                if (res.success && res.data) {
+                    pacientesData = res.data;
+                    selectCola.innerHTML = '<option value="">-- Seleccione un paciente --</option>';
+                    
+                    res.data.forEach(item => {
+                        // Solo listamos pacientes cuyo estado requiera atención activa en el consultorio
+                        if(item.estado_atencion !== 'Atendido') {
+                            const option = document.createElement('option');
+                            option.value = item.id_cola;
+                            option.textContent = `${item.paciente_nombres.toUpperCase()} ${item.paciente_apellidos.toUpperCase()} (${item.nivel_triaje}) - ${item.consultorio}`;
+                            selectCola.appendChild(option);
+                        }
+                    });
+                }
+            })
+            .catch(err => console.error("Error al obtener cola de pacientes:", err));
+    }
+
+    // Auto-completar la información complementaria al cambiar de paciente
+    function actualizarInfoPaciente() {
+        const idColaSel = document.getElementById('id_cola').value;
+        const info = pacientesData.find(p => p.id_cola == idColaSel);
+        
+        if (info) {
+            document.getElementById('id_paciente').value = info.id_cola; // Mapeado dinámico
+            // Simulamos la obtención del id_medico asignado desde la vista actual
+            document.getElementById('id_medico').value = 1; 
+            document.getElementById('display-triaje').value = `Nivel ${info.nivel_triaje} en ${info.consultorio}`;
+            
+            // Cambiar color de fondo del input según triaje para seguridad visual
+            const triajeInput = document.getElementById('display-triaje');
+            if (info.nivel_triaje === 'Rojo') triajeInput.style.backgroundColor = '#fecaca';
+            else if (info.nivel_triaje === 'Amarillo') triajeInput.style.backgroundColor = '#fef08a';
+            else triajeInput.style.backgroundColor = '#bbf7d0';
+        }
+    }
+
+    // Enviar formulario al backend atender_paciente.php
+    document.getElementById('form-atencion').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const alertBox = document.getElementById('alert-box');
+        const idColaSel = document.getElementById('id_cola').value;
+        const info = pacientesData.find(p => p.id_cola == idColaSel);
+
+        const datos = {
+            id_cola: parseInt(idColaSel),
+            id_paciente: info ? parseInt(info.id_cola) : 1, 
+            id_medico: 1, // Médico de sesión por defecto
+            diagnostico: document.getElementById('diagnostico').value,
+            tratamiento: document.getElementById('tratamiento').value,
+            destino_paciente: document.getElementById('destino_paciente').value
+        };
+
+        fetch('atender_paciente.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        })
+        .then(res => res.json())
+        .then(data => {
+            alertBox.style.display = 'block';
+            if (data.success) {
+                alertBox.className = 'alert alert-success';
+                alertBox.innerText = data.mensaje;
+                document.getElementById('form-atencion').reset();
+                document.getElementById('display-triaje').style.backgroundColor = '#f8fafc';
+                cargarPacientesEnEspera(); // Recargar el combobox
+            } else {
+                alertBox.className = 'alert alert-error';
+                alertBox.innerText = data.mensaje;
+            }
+        })
+        .catch(err => {
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert alert-error';
+            alertBox.innerText = "Error de red conectando al servidor médico.";
+        });
+    });
+
+    window.onload = cargarPacientesEnEspera;
+</script>
+
+</body>
+</html>

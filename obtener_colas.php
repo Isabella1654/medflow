@@ -9,13 +9,14 @@ $database = new Database();
 $db = $database->conectar();
 
 try {
-    // Consulta corregida usando 'nombre' y 'apellido' en lugar de 'nombres' y 'apellidos' para la tabla pacientes
-    $query = "SELECT c.id_cola, p.nombre AS paciente_nombres, p.apellido AS paciente_apellidos, 
+    // FILTRADO CRÍTICO: Solo trae pacientes que NO hayan sido atendidos aún
+    $query = "SELECT c.id_cola, p.id_paciente, p.nombre AS paciente_nombres, p.apellido AS paciente_apellidos, 
                      c.nivel_triaje, c.consultorio, c.estado_atencion,
                      e.nombres AS medico_nombres, e.apellidos AS medico_apellidos
               FROM atenciones_colas c
               INNER JOIN pacientes p ON c.id_paciente = p.id_paciente
               LEFT JOIN empleados e ON c.id_medico_asignado = e.id_empleado
+              WHERE c.estado_atencion != 'Atendido'
               ORDER BY 
                 CASE 
                     WHEN c.nivel_triaje = 'Rojo' THEN 1
