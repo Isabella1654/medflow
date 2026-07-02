@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedFlow - Gestión de Hospitalización</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f8fafc; padding: 30px; color: #1e293b; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        h1 { color: #0f172a; font-size: 1.6rem; }
+        
+        .grid-camas { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 20px; }
+        .card-cama { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-left: 6px solid #f59e0b; }
+        .cama-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .cama-titulo { font-weight: bold; font-size: 1.1rem; color: #1e293b; }
+        .badge-estado { background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        
+        .paciente-info { font-size: 0.95rem; margin-bottom: 8px; }
+        .indicaciones { background: #f1f5f9; padding: 10px; border-radius: 6px; font-size: 0.85rem; color: #475569; margin-top: 10px; border-left: 3px solid #cbd5e1; }
+        
+        .input-cama { width: 100%; padding: 8px; margin-top: 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.9rem; }
+        .btn-asignar { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; }
+        .btn-asignar:hover { background: #059669; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🛏️ Panel de Asignación de Camas y Pisos (Hospitalización)</h1>
+    </div>
+
+    <div class="grid-camas" id="contenedor-hospitalizados">
+        </div>
+</div>
+
+<script>
+    function cargarHospitalizados() {
+        const contenedor = document.getElementById('contenedor-hospitalizados');
+        contenedor.innerHTML = '<p style="color: #64748b;">Buscando traslados médicos desde urgencias...</p>';
+
+        fetch('obtener_consultas.php')
+            .then(res => res.json())
+            .then(res => {
+                if (res.success && res.data) {
+                    contenedor.innerHTML = '';
+                    
+                    // Filtrar solo los remitidos a Hospitalización
+                    const hospitalizados = res.data.filter(c => c.destino_paciente === 'Hospitalización');
+
+                    if (hospitalizados.length === 0) {
+                        contenedor.innerHTML = '<p style="color: #64748b; grid-column: 1/-1; text-align: center; padding: 30px;">No hay pacientes pendientes de asignación de habitación por el momento.</p>';
+                        return;
+                    }
+
+                    hospitalizados.forEach((item, index) => {
+                        // Simulación de persistencia local para la cama asignada por el usuario
+                        const camaGuardada = localStorage.getItem(`cama_paciente_${item.id_consulta}`) || '';
+                        const badgeTxt = camaGuardada ? `ASIGNADO: ${camaGuardada}` : 'PENDIENTE ASIGNAR CAMA';
+                        const borderStyle = camaGuardada ? 'border-left-color: #10b981;' : 'border-left-color: #f59e0b;';
+
+                        const card = document.createElement('div');
+                        card.className = 'card-cama';
+                        card.style = borderStyle;
+                        card.innerHTML = `
+                            <div class="cama-header">
+                                <span class="cama-titulo">👤 Paciente #${item.cedula.substr(-4)}</span>
+                                <span class="badge-estado">${badgeTxt}</span>
+                            </div>
+                            <div class="paciente-info"><strong>Nombre:</strong> ${item.paciente_nombre.toUpperCase()} ${item.paciente_apellido.toUpperCase()}</div>
+                            <div class="paciente-info"><strong>Médico de Urgencias:</strong> ${item.medico_tratante}</div>
+                            <div class="paciente-info"><strong>Diagnóstico:</strong> ${item.diagnostico}</div>
+                            
+                            <div class="indicaciones">
+                                <strong>📋 Plan de Manejo Clínico:</strong><br>
+                                ${item.medicinas_formuladas}
+                            </div>
+
+                            <input type="text" id="input-${item.id_consulta}" class="input-cama" placeholder="Ej: Habitación 302, Cama B" value="${camaGuardada}">
+                            <button class="btn-asignar" onclick="guardarCama(${item.id_consulta})">📌 Confirmar Ubicación</button>
+                        `;
+                        contenedor.appendChild(card);
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                contenedor.innerHTML = '<p style="color: #ef4444;">Error conectando al sistema de pisos.</p>';
+            });
+    }
+
+    function guardarCama(idConsulta) {
+        const valorCama = document.getElementById(`input-${idConsulta}`).value;
+        if (!valorCama.trim()) {
+            alert("Por favor escribe un número de cama o habitación.");
+            return;
+        }
+        localStorage.setItem(`cama_paciente_${idConsulta}`, valorCama);
+        alert("¡Cama y piso asignados con éxito en la central de enfermería!");
+        cargarHospitalizados();
+    }
+
+    window.onload = cargarHospitalizados;
+</script>
+
+</body>
+</html>

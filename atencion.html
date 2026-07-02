@@ -127,14 +127,15 @@
         const idColaSel = document.getElementById('id_cola').value;
         const info = pacientesData.find(p => p.id_cola == idColaSel);
 
-        const datos = {
-            id_cola: parseInt(idColaSel),
-            id_paciente: info ? parseInt(info.id_cola) : 1, 
-            id_medico: 1, // Médico de sesión por defecto
-            diagnostico: document.getElementById('diagnostico').value,
-            tratamiento: document.getElementById('tratamiento').value,
-            destino_paciente: document.getElementById('destino_paciente').value
-        };
+        // CORRECCIÓN EXACTA EN ATENCION.HTML
+const datos = {
+    id_cola: parseInt(idColaSel),
+    id_paciente: info ? parseInt(info.id_paciente) : 1, // ✨ Cambiado a id_paciente
+    id_medico: 1, // Médico de sesión por defecto
+    diagnostico: document.getElementById('diagnostico').value,
+    tratamiento: document.getElementById('tratamiento').value,
+    destino_paciente: document.getElementById('destino_paciente').value
+};
 
         fetch('atender_paciente.php', {
             method: 'POST',

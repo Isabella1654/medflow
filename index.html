@@ -3,206 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedFlow - Admisión de Pacientes</title>
+    <title>MedFlow - Sistema de Gestión Hospitalaria</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body {
-            background-color: #f0f4f8;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            background-color: #ffffff;
-            width: 100%;
-            max-width: 550px;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
-        h2 {
-            color: #1e293b;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-        p.subtitle {
-            color: #64748b;
-            text-align: center;
-            font-size: 0.9rem;
-            margin-bottom: 25px;
-        }
-        .form-group {
-            margin-bottom: 18px;
-        }
-        label {
-            display: block;
-            margin-bottom: 6px;
-            color: #334155;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .form-control:focus {
-            border-color: #3b82f6;
-        }
-        .row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        .btn-submit {
-            width: 100%;
-            background-color: #2563eb;
-            color: #ffffff;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 10px;
-        }
-        .btn-submit:hover {
-            background-color: #1d4ed8;
-        }
-        /* Banners de Alerta Dinámicos */
-        .alert {
-            padding: 12px 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-            display: none;
-            line-height: 1.4;
-        }
-        .alert-success {
-            background-color: #dcfce7;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        .alert-danger {
-            background-color: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fca5a5;
-        }
-        .alert-warning {
-            background-color: #fef9c3;
-            color: #854d0e;
-            border: 1px solid #fef08a;
-            border-left: 5px solid #eab308;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f1f5f9; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        
+        .welcome-container { max-width: 1000px; width: 100%; text-align: center; }
+        h1 { color: #0f172a; font-size: 2.5rem; margin-bottom: 10px; font-weight: 800; }
+        p.subtitle { color: #64748b; font-size: 1.1rem; margin-bottom: 40px; }
+        
+        .grid-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+        .menu-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; transition: all 0.2s; border: 1px solid #e2e8f0; }
+        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(2, 132, 199, 0.1); border-color: #0284c7; }
+        
+        .icon { font-size: 3rem; margin-bottom: 15px; }
+        .card-title { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+        .card-desc { font-size: 0.9rem; color: #64748b; line-height: 1.4; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>MedFlow Hospitalario</h2>
-    <p class="subtitle">Módulo de Admisión - Apertura de Folio</p>
+<div class="welcome-container">
+    <h1>🏥 Sistema Médico MedFlow</h1>
+    <p class="subtitle">Ecosistema modular de Admisión, Clasificación y Despacho Hospitalario</p>
 
-    <div id="liveAlert" class="alert"></div>
+    <div class="grid-menu">
+        <a href="ingresar_paciente.php" class="menu-card">
+            <div class="icon">📝</div>
+            <div class="card-title">Admisión y Registro</div>
+            <div class="card-desc">Ingreso inicial de datos de pacientes a la plataforma central.</div>
+        </a>
 
-    <form id="formAdmision">
-        <div class="form-group">
-            <label for="cedula">Documento de Identidad (Cédula / TI)</label>
-            <input type="text" id="cedula" class="form-control" placeholder="Ej:  100234567 " required>
-        </div>
+        <a href="triaje.html" class="menu-card">
+            <div class="icon">🩺</div>
+            <div class="card-title">Módulo de Triaje</div>
+            <div class="card-desc">Toma de signos vitales y cálculo algorítmico del nivel de gravedad.</div>
+        </a>
 
-        <div class="row">
-            <div class="form-group">
-                <label for="nombre">Nombre(s)</label>
-                <input type="text" id="nombre" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="apellido">Apellido(s)</label>
-                <input type="text" id="apellido" class="form-control" required>
-            </div>
-        </div>
+        <a href="dashboard.html" class="menu-card">
+            <div class="icon">📊</div>
+            <div class="card-title">Tablero Urgencias</div>
+            <div class="card-desc">Seguimiento visual en tiempo real de colas y médicos asignados.</div>
+        </a>
 
-        <div class="row">
-            <div class="form-group">
-                <label for="fecha_nacimiento">Fecha de Nacimiento</label>
-                <input type="date" id="fecha_nacimiento" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="eps">EPS</label>
-                <input type="text" id="eps" class="form-control" placeholder="Ej: Sura, Sanitas" required>
-            </div>
-        </div>
+        <a href="atencion.html" class="menu-card">
+            <div class="icon">👨‍⚕️</div>
+            <div class="card-title">Evolución Médica</div>
+            <div class="card-desc">Consultorio médico: prescripción de fórmulas y orden de despacho.</div>
+        </a>
 
-        <button type="submit" class="btn-submit">Procesar Ingreso / Folio</button>
-    </form>
+        <a href="facturacion.html" class="menu-card">
+            <div class="icon">📑</div>
+            <div class="card-title">Cuentas y EPS</div>
+            <div class="card-desc">Liquidación administrativa de pacientes dados de alta o remitidos.</div>
+        </a>
+
+        <a href="hospitalizacion.html" class="menu-card">
+            <div class="icon">🛏️</div>
+            <div class="card-title">Camas y Pisos</div>
+            <div class="card-desc">Control de hospitalizaciones y asignación de habitaciones físicas.</div>
+        </a>
+    </div>
 </div>
-
-<script>
-    document.getElementById('formAdmision').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        // Ocultar alertas previas
-        const alertBox = document.getElementById('liveAlert');
-        alertBox.style.display = 'none';
-        alertBox.className = 'alert';
-
-        // Capturar los valores del formulario
-        const datos = {
-            cedula: document.getElementById('cedula').value,
-            nombre: document.getElementById('nombre').value,
-            apellido: document.getElementById('apellido').value,
-            fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
-            eps: document.getElementById('eps').value
-        };
-
-        // Enviar datos al controlador PHP
-        fetch('ingresar_paciente.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(datos)
-        })
-        .then(response => response.json())
-        .then(data => {
-            alertBox.style.display = 'block';
-
-            // Escenario 1: Alerta administrativa (Paciente ya tiene 18 años)
-            if (data.alerta_administrative || data.alerta_administrativa) {
-                alertBox.classList.add('alert-warning');
-                alertBox.innerHTML = `<strong>⚠️ REPORTE ADMINISTRATIVO:</strong><br>${data.mensaje}`;
-            } 
-            // Escenario 2: Registro exitoso (Paciente Nuevo)
-            else if (data.success) {
-                alertBox.classList.add('alert-success');
-                alertBox.innerHTML = `<strong>✅ Éxito:</strong> ${data.mensaje}`;
-                document.getElementById('formAdmision').reset(); // Limpiar campos si es nuevo
-            } 
-            // Escenario 3: Errores controlados (Campos vacíos o duplicados normales)
-            else {
-                alertBox.classList.add('alert-danger');
-                alertBox.innerHTML = `<strong>❌ Error:</strong> ${data.mensaje}`;
-            }
-        })
-        .catch(error => {
-            alertBox.style.display = 'block';
-            alertBox.classList.add('alert-danger');
-            alertBox.innerHTML = `<strong>❌ Error Crítico:</strong> No se pudo conectar con el servidor de admisión.`;
-            console.error('Error:', error);
-        });
-    });
-</script>
 
 </body>
 </html>
