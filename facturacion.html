@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedFlow - Módulo de Facturación y Liquidación</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f1f5f9; padding: 30px; color: #1e293b; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        h1 { color: #0f172a; font-size: 1.6rem; }
+        .btn-refresh { background: #0284c7; color: white; border: none; padding: 10px 18px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        .btn-refresh:hover { background: #0369a1; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; }
+        th, td { padding: 14px; border-bottom: 1px solid #e2e8f0; font-size: 0.95rem; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+        tr:hover { background-color: #f8fafc; }
+        
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .badge-alta { background-color: #d1fae5; color: #065f46; }
+        .badge-remision { background-color: #e0f2fe; color: #0369a1; }
+        .txt-tiempo { font-weight: bold; color: #475569; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>📑 Liquidación de Cuentas y Cobros a EPS</h1>
+        <button class="btn-refresh" onclick="cargarFacturacion()">🔄 Recargar Cuentas</button>
+    </div>
+
+    <table id="tabla-facturacion">
+        <thead>
+            <tr>
+                <th>Paciente</th>
+                <th>Identificación</th>
+                <th>Entidad (EPS)</th>
+                <th>Médico Tratante</th>
+                <th>Medicinas Formuladas / Procedimientos</th>
+                <th>Estancia</th>
+                <th>Destino</th>
+            </tr>
+        </thead>
+        <tbody id="lista-facturas">
+            <tr>
+                <td colspan="7" style="text-align: center; color: #64748b;">Cargando registros de liquidación...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function cargarFacturacion() {
+        const tbody = document.getElementById('lista-facturas');
+        
+        fetch('obtener_consultas.php')
+            .then(res => res.json())
+            .then(res => {
+                if (res.success && res.data) {
+                    tbody.innerHTML = '';
+                    
+                    // Filtrar los que aplican para cobros / facturación de salida (Alta o Remisión)
+                    const aptosFacturacion = res.data.filter(c => c.destino_paciente === 'Alta Médica' || c.destino_paciente === 'Remisión');
+                    
+                    if(aptosFacturacion.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b;">No hay cuentas pendientes por liquidar el día de hoy.</td></tr>';
+                        return;
+                    }
+
+                    aptosFacturacion.forEach(item => {
+                        const tr = document.createElement('tr');
+                        const badgeClass = item.destino_paciente === 'Alta Médica' ? 'badge-alta' : 'badge-remision';
+                        
+                        tr.innerHTML = `
+                            <strong>${item.paciente_nombre.toUpperCase()} ${item.paciente_apellido.toUpperCase()}</strong>
+                            <td>${item.cedula}</td>
+                            <td><span style="color: #0284c7; font-weight: 600;">${item.eps}</span></td>
+                            <td>${item.medico_tratante}</td>
+                            <td><i style="color: #475569;">${item.medicinas_formuladas}</i></td>
+                            <td class="txt-tiempo">⏱️ ${item.duracion_minutos} min</td>
+                            <td><span class="badge ${badgeClass}">${item.destino_paciente.toUpperCase()}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            })
+            .catch(err => {
+                console.error("Error al cargar facturación:", err);
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #ef4444;">Error conectando con el servidor de auditoría.</td></tr>';
+            });
+    }
+
+    window.onload = cargarFacturacion;
+</script>
+
+</body>
+</html>
