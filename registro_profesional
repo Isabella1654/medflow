@@ -1,0 +1,6 @@
+UPDATE `empleados` SET `registro_profesional` = 'RE-10293-MED', `firma_digital` = '✍️ Dr. Luis Pérez - Especialista en Urgencias' WHERE `usuario` = 'dr_luis_perez';
+UPDATE `empleados` SET `registro_profesional` = 'RE-58492-MED', `firma_digital` = '✍️ Dr. Juan C. Martínez - Pediatra e Intensivista' WHERE `usuario` = 'dr_juan_martinez';
+UPDATE `empleados` SET `registro_profesional` = 'RE-94831-MED', `firma_digital` = '✍️ Dr. Andrés Herrera - Médico Internista' WHERE `usuario` = 'dr_andres_herrera';
+UPDATE `empleados` SET `registro_profesional` = 'RE-30492-MED', `firma_digital` = '✍️ Dra. Ma. Fernanda Rojas - Medicina General y Críticos' WHERE `usuario` = 'dra_mafe_rojas';
+UPDATE `empleados` SET `registro_profesional` = 'RE-77281-MED', `firma_digital` = '✍️ Dra. Laura Moreno - Especialista en Cuidado Crítico' WHERE `usuario` = 'dra_laura_moreno';
+UPDATE `empleados` SET `registro_profesional` = 'RE-11029-MED', `firma_digital` = '✍️ Dr. Luis Ramírez - Cirujano General' WHERE `usuario` = 'dr_luis_ramirez';

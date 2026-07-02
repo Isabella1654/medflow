@@ -83,14 +83,23 @@
     <div class="contenido-clinico" id="p-incapacidad">No se registran días de aislamiento o incapacidad laboral en el alta actual.</div>
 
     <div class="firmas">
-        <div class="linea-firma">Firma del Paciente / Acudiente<br>C.C.</div>
-        <div class="linea-firma">
-            <strong id="m-nombre">Dr. --</strong><br>
-            Médico Tratante<br>
-            Reg. Profesional: <span id="m-registro">--</span>
+    <div class="linea-firma">Firma del Paciente / Acudiente<br>C.C.</div>
+    <div class="linea-firma">
+        <div id="m-firma" style="font-family: 'Courier New', monospace; font-style: italic; font-size: 1.1rem; color: #0369a1; margin-bottom: 5px;"></div>
+        <strong id="m-nombre">Dr. --</strong><br>
+        Médico Tratante<br>
+        Reg. Profesional: <span id="m-registro">--</span>
+    </div>
+    </div>
+        <div class="firmas">
+            <div class="linea-firma">Firma del Paciente / Acudiente<br>C.C.</div>
+            <div class="linea-firma">
+                <strong id="m-nombre">Dr. --</strong><br>
+                Médico Tratante<br>
+                Reg. Profesional: <span id="m-registro">--</span>
+            </div>
         </div>
     </div>
-</div>
 
 <script>
     // Capturar el ID de la URL
@@ -112,6 +121,11 @@
                     document.getElementById('p-eps').innerText = d.eps;
                     document.getElementById('p-diagnostico').innerText = d.diagnostico;
                     document.getElementById('p-manejo').innerText = d.plan_manejo;
+
+                     
+                    document.getElementById('m-nombre').innerText = d.medico_tratante;
+                    document.getElementById('m-registro').innerText = d.medico_registro;
+                    document.getElementById('m-firma').innerText = d.medico_firma || "_______________________";
                     
                     document.getElementById('m-nombre').innerText = d.medico_tratante;
                     document.getElementById('m-registro').innerText = d.medico_registro || 'M.D 2026-REG-COL';
