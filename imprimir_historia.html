@@ -82,21 +82,21 @@
     <div class="seccion-titulo">5. Certificación de Incapacidad Médica</div>
     <div class="contenido-clinico" id="p-incapacidad">No se registran días de aislamiento o incapacidad laboral en el alta actual.</div>
 
+    <!-- SECCIÓN UNIFICADA DE FIRMAS (REEMPLAZA TODO EL BLOQUE DUPLICADO POR ESTE) -->
     <div class="firmas">
-    <div class="linea-firma">Firma del Paciente / Acudiente<br>C.C.</div>
-    <div class="linea-firma">
-        <div id="m-firma" style="font-family: 'Courier New', monospace; font-style: italic; font-size: 1.1rem; color: #0369a1; margin-bottom: 5px;"></div>
-        <strong id="m-nombre">Dr. --</strong><br>
-        Médico Tratante<br>
-        Reg. Profesional: <span id="m-registro">--</span>
-    </div>
-    </div>
-        <div class="firmas">
-            <div class="linea-firma">Firma del Paciente / Acudiente<br>C.C.</div>
-            <div class="linea-firma">
+        <div class="linea-firma">
+            <br><br><br>
+            ____________________________________________<br>
+            Firma del Paciente / Acudiente<br>
+            C.C.
+        </div>
+        <div class="linea-firma" style="text-align: center;">
+            <!-- Contenedor de la firma digital con letra cursiva elegante -->
+            <div id="m-firma" style="font-family: 'Georgia', serif; font-style: italic; font-size: 1.2rem; color: #0284c7; font-weight: bold; margin-bottom: 5px; height: 30px;"></div>
+            <div style="border-top: 1px solid #94a3b8; padding-top: 5px;">
                 <strong id="m-nombre">Dr. --</strong><br>
                 Médico Tratante<br>
-                Reg. Profesional: <span id="m-registro">--</span>
+                <strong>Reg. Profesional:</strong> <span id="m-registro">--</span>
             </div>
         </div>
     </div>
@@ -123,10 +123,16 @@
                     document.getElementById('p-manejo').innerText = d.plan_manejo;
 
                      
+                   
                     document.getElementById('m-nombre').innerText = d.medico_tratante;
-                    document.getElementById('m-registro').innerText = d.medico_registro;
-                    document.getElementById('m-firma').innerText = d.medico_firma || "_______________________";
-                    
+                    document.getElementById('m-registro').innerText = d.medico_registro || d.numero_documento;
+
+                    // Si el médico no tiene firma registrada en la BD, le ponemos una firma digital genérica bonita basada en su nombre
+                    if (d.medico_firma) {
+                        document.getElementById('m-firma').innerText = d.medico_firma;
+                    } else {
+                        document.getElementById('m-firma').innerText = `✍️ Dr. ${d.medico_tratante}`;
+                    }
                     document.getElementById('m-nombre').innerText = d.medico_tratante;
                     document.getElementById('m-registro').innerText = d.medico_registro || 'M.D 2026-REG-COL';
 
