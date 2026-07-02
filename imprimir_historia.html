@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedFlow - Formato Único de Egreso e Impresión</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #f1f5f9; padding: 20px; color: #1e293b; }
+        
+        .no-print-zone { max-width: 800px; margin: 0 auto 15px auto; display: flex; justify-content: space-between; }
+        .btn-print { background: #10b981; color: white; border: none; padding: 12px 24px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+        .btn-print:hover { background: #059669; }
+        .btn-back { background: #64748b; color: white; border: none; padding: 12px 24px; font-weight: bold; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 1rem; }
+
+        .documento-hoja { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 8px solid #0284c7; }
+        
+        .encabezado { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 25px; }
+        .clinica-info h1 { font-size: 1.8rem; color: #0284c7; font-weight: 800; }
+        .clinica-info p { font-size: 0.85rem; color: #64748b; }
+        .doc-titulo { text-align: right; }
+        .doc-titulo h2 { font-size: 1.2rem; color: #0f172a; }
+        .doc-titulo p { font-size: 0.9rem; font-weight: bold; color: #64748b; }
+
+        .seccion-titulo { background: #f1f5f9; padding: 6px 10px; font-size: 0.9rem; font-weight: bold; color: #0f172a; text-transform: uppercase; margin-bottom: 12px; margin-top: 25px; border-left: 4px solid #0284c7; }
+        
+        .bloque-datos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.95rem; }
+        .dato-item { line-height: 1.5; }
+        .dato-item strong { color: #475569; }
+
+        .contenido-clinico { font-size: 1rem; line-height: 1.6; color: #0f172a; white-space: pre-wrap; background: #fafafa; padding: 15px; border: 1px solid #e2e8f0; border-radius: 6px; }
+
+        .firmas { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .linea-firma { width: 45%; border-top: 1px solid #94a3b8; text-align: center; padding-top: 8px; font-size: 0.9rem; color: #475569; }
+
+        /* REGLAS CRÍTICAS DE IMPRESIÓN FÍSICA */
+        @media print {
+            body { background: white; padding: 0; color: black; }
+            .no-print-zone { display: none !important; }
+            .documento-hoja { box-shadow: none; padding: 0; margin: 0; border-top: none; }
+            .seccion-titulo { background: #e2e8f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print-zone">
+    <a href="facturacion.html" class="btn-back">⬅️ Volver al Panel</a>
+    <button class="btn-print" onclick="window.print()">🖨️ Ejecutar Impresión Física / PDF</button>
+</div>
+
+<div class="documento-hoja" id="documento">
+    <div class="encabezado">
+        <div class="clinica-info">
+            <h1>🏥 CLINICA MEDFLOW S.A.S.</h1>
+            <p>Servicio de Urgencias y Hospitalización de Alta Complejidad</p>
+            <p>Sede Principal - Turbaco, Bolívar</p>
+        </div>
+        <div class="doc-titulo">
+            <h2>RESUMEN DE ATENCIÓN</h2>
+            <p id="lbl-fecha">Fecha: --/--/----</p>
+        </div>
+    </div>
+
+    <div class="seccion-titulo">1. Datos Generales del Paciente</div>
+    <div class="bloque-datos">
+        <div class="dato-item"><strong>Paciente:</strong> <span id="p-nombre">--</span></div>
+        <div class="dato-item"><strong>Identificación:</strong> <span id="p-cedula">--</span></div>
+        <div class="dato-item"><strong>Edad:</strong> <span id="p-edad">--</span> años</div>
+        <div class="dato-item"><strong>Entidad / EPS:</strong> <span id="p-eps">--</span></div>
+    </div>
+
+    <div class="seccion-titulo">2. Diagnóstico Médico de Egreso</div>
+    <div class="contenido-clinico" id="p-diagnostico">--</div>
+
+    <div class="seccion-titulo">3. Plan de Manejo, Medicamentos y Formulaciones</div>
+    <div class="contenido-clinico" id="p-manejo">--</div>
+
+    <div class="seccion-titulo">4. Órdenes de Control e Interconsultas Especializadas</div>
+    <div class="contenido-clinico" id="p-controles">Analizando indicaciones de revaloración médica en el plan de manejo...</div>
+
+    <div class="seccion-titulo">5. Certificación de Incapacidad Médica</div>
+    <div class="contenido-clinico" id="p-incapacidad">No se registran días de aislamiento o incapacidad laboral en el alta actual.</div>
+
+    <div class="firmas">
+        <div class="linea-firma">Firma del Paciente / Acudiente<br>C.C.</div>
+        <div class="linea-firma">
+            <strong id="m-nombre">Dr. --</strong><br>
+            Médico Tratante<br>
+            Reg. Profesional: <span id="m-registro">--</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Capturar el ID de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const idConsulta = urlParams.get('id');
+
+    if (!idConsulta) {
+        alert("Falta el parámetro de orden médica.");
+    } else {
+        fetch(`obtener_egreso.php?id=${idConsulta}`)
+            .then(res => res.json())
+            .then(res => {
+                if(res.success && res.data) {
+                    const d = res.data;
+                    document.getElementById('lbl-fecha').innerText = `Fecha de Cierre: ${d.hora_egreso}`;
+                    document.getElementById('p-nombre').innerText = `${d.paciente_nombre} ${d.paciente_apellido}`.toUpperCase();
+                    document.getElementById('p-cedula').innerText = d.cedula;
+                    document.getElementById('p-edad').innerText = d.edad;
+                    document.getElementById('p-eps').innerText = d.eps;
+                    document.getElementById('p-diagnostico').innerText = d.diagnostico;
+                    document.getElementById('p-manejo').innerText = d.plan_manejo;
+                    
+                    document.getElementById('m-nombre').innerText = d.medico_tratante;
+                    document.getElementById('m-registro').innerText = d.medico_registro || 'M.D 2026-REG-COL';
+
+                    // Algoritmo de extracción automatizada de Controles Especiales
+                    const textoManejo = d.plan_manejo.toLowerCase();
+                    
+                    // Buscar si dice meses, semanas, especialista, etc.
+                    if (textoManejo.includes('meses') || textoManejo.includes('mes') || textoManejo.includes('especialista') || textoManejo.includes('control')) {
+                        document.getElementById('p-controles').innerText = `🚨 REMISIÓN FORMAL:\nEl paciente presenta orden de control clínico o interconsulta externa especializada según evolución. Favor agendar cita de revaloración médica preventiva en el rango de los próximos 2 o más meses según disponibilidad de agenda de su EPS (${d.eps}).`;
+                    } else {
+                        document.getElementById('p-controles').innerText = "El paciente no requiere controles prioritarios externos por especialista en el corto plazo; manejo ambulatorio por medicina general.";
+                    }
+
+                    // Algoritmo para extraer Días de Incapacidad del texto clínico
+                    if (textoManejo.includes('incapacidad') || textoManejo.includes('dias') || textoManejo.includes('días')) {
+                        document.getElementById('p-incapacidad').innerText = "📅 CERTIFICADO DE INCAPACIDAD ACTIVO:\nSe prescribe reposo físico absoluto e incapacidad médica temporal debido al cuadro agudo presentado. Validar términos de reposo indicados en la sección del Plan de Manejo Clínico de Urgencias.";
+                    }
+                } else {
+                    alert("No se pudo cargar el reporte: " + res.mensaje);
+                }
+            })
+            .catch(err => console.error("Error cargando egreso:", err));
+    }
+</script>
+
+</body>
+</html>

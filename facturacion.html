@@ -74,15 +74,18 @@
                         const tr = document.createElement('tr');
                         const badgeClass = item.destino_paciente === 'Alta Médica' ? 'badge-alta' : 'badge-remision';
                         
-                        tr.innerHTML = `
-                            <strong>${item.paciente_nombre.toUpperCase()} ${item.paciente_apellido.toUpperCase()}</strong>
-                            <td>${item.cedula}</td>
-                            <td><span style="color: #0284c7; font-weight: 600;">${item.eps}</span></td>
-                            <td>${item.medico_tratante}</td>
-                            <td><i style="color: #475569;">${item.medicinas_formuladas}</i></td>
-                            <td class="txt-tiempo">⏱️ ${item.duracion_minutos} min</td>
-                            <td><span class="badge ${badgeClass}">${item.destino_paciente.toUpperCase()}</span></td>
-                        `;
+                       // REEMPLAZA ESTA SECCIÓN EN TU FACTURACION.HTML PARA AGREGAR EL BOTÓN DE IMPRESIÓN
+                    tr.innerHTML = `
+                        <td><strong>${item.paciente_nombre.toUpperCase()} ${item.paciente_apellido.toUpperCase()}</strong></td>
+                        <td>${item.cedula}</td>
+                        <td><span style="color: #0284c7; font-weight: 600;">${item.eps}</span></td>
+                        <td>${item.medico_tratante}</td>
+                        <td><i style="color: #475569;">${item.medicinas_formuladas}</i></td>
+                        <td class="txt-tiempo">⏱️ ${item.duracion_minutos} min</td>
+                        <td>
+                            <a href="imprimir_historia.html?id=${item.id_consulta}" style="background: #0284c7; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; display: inline-block;">🖨️ Historia y Ordenes</a>
+                        </td>
+                    `;
                         tbody.appendChild(tr);
                     });
                 }
